@@ -63,6 +63,11 @@ $($important | Format-Table -AutoSize | Out-String)
     # 異常があれば通知
     if ($disk.PredictFailure -or ($important.Raw -gt 0)) {
         Send-MailMessage -SmtpServer $smtpServer -From $from -To $to `
-            -Subject "[ALERT] SMART Warning on $env:COMPUTERNAME" -Body $body
+            -Subject "[ALERT] SMART Warning on $env:COMPUTERNAME" -Body $body -Encoding utf8
+    }
+    else {
+        # 正常でも週次レポートとしてメール送信
+        Send-MailMessage -SmtpServer $smtpServer -From $from -To $to `
+            -Subject "SMART Weekly Report on $env:COMPUTERNAME" -Body $body -Encoding utf8
     }
 }
