@@ -24,11 +24,20 @@ HDD 監視スクリプトです。
 
 ## Check-SMART.ps1
 
-SMART 取得スクリプトです。
+SMART 取得スクリプトです。HDD / SATA SSD と NVMe SSD を自動判別して監視します。
+
+### HDD / SATA SSD
 
 * 代替処理済みセクタ（05）
+* Spin Retry Count（0A）
 * 代替処理待ちセクタ（197）
 * 回復不能セクタ（198）
 * PredictFailure（SMART が故障予測したか）
 
-をメール通知します。
+### NVMe SSD
+
+* 使用率（05: `Value = 100 − PercentageUsed`）が `$nvmeUsedThreshold` 以下でアラート
+* PredictFailure（Critical Warning バイトが非 0 のとき）
+
+`$nvmeUsedThreshold`（デフォルト: 10）を変更することで感度を調整できます。  
+Value が 10 以下 = 消費率 90% 超でアラートを発報します。
