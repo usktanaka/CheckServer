@@ -69,18 +69,33 @@ foreach ($disk in $disks) {
 
     # 属性の説明
     $legend = if ($isNvme) {
-        "5(05) ディスク使用率、$(100 - $nvmeUsedThreshold)% 以上消費でアラート"
+        @"
+■ SMART重要項目
+・05(ID 5) ディスク使用率
+
+■ 判定の目安（RAW値）
+・$(100 - $nvmeUsedThreshold)% 以上消費でアラート → 早めの交換を推奨。
+"@
     } else {
         @"
-5(05) 代替処理済みセクタ
-197(C5) 代替処理待ちセクタ
-198(C6) 回復不能セクタ
+■ SMART重要項目
+・05 (ID 5) 代替処理済みセクタ数 (Reallocated Sector Count)
+　不良セクタが発生し、予備領域へ置き換えられた回数です。増加傾向がある場合はディスク劣化の兆候です。
+・C5 (ID 197) 代替処理待ちセクタ数 (Current Pending Sector Count)
+　読み取りエラーが発生し、代替処理候補となっているセクタ数です。0以外の場合は注意が必要です。
+・C6 (ID 198) 回復不能セクタ数 (Offline Uncorrectable Count)
+　ECC等でも修復できなかったセクタ数です。データ消失につながる可能性があります。
+
+■ 判定の目安（RAW値）
+・05 が増加 → ディスク劣化の兆候。早めの交換を推奨。
+・C5 または C6 が 1 以上 → 直ちにバックアップを取得し、ディスク交換を推奨。
+・C5 または C6 が増加傾向 → 障害進行中の可能性が高いため、使用継続は非推奨。
 "@
     }
 
     # メール本文
     $body = @"
-SMART weekly check on $env:COMPUTERNAME
+SMART weekly check for $env:COMPUTERNAME
 
 Disk: $instance
 Type: $(if ($isNvme) { 'NVMe SSD' } else { 'HDD/SATA SSD' })
