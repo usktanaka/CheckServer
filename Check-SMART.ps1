@@ -56,11 +56,26 @@ foreach ($disk in $disks) {
     if ($isNvme) {
         # NVMe: ID 5 は使用率の補数（Value = 100 - PercentageUsed）
         $important = $attributes | Where-Object { $_.ID -eq 5 }
+        if ($important) {
+            # OS の変換では Raw が常に 0 になるため、実使用率を計算して表示用に補完
+            $important.Raw = 100 - $important.Value
+        }
         $nvmeAlert = $important -and ($important.Value -le $nvmeUsedThreshold)
     } else {
         # HDD / SATA SSD: セクタ不良系属性
-        $important = $attributes | Where-Object { $_.ID -in 5, 10, 197, 198 }
+        $important = $attributes | Where-Object { $_.ID -in 5, 197, 198 }
         $nvmeAlert = $false
+    }
+
+    # 属性の説明
+    $legend = if ($isNvme) {
+        "5(05) ディスク使用率、$(100 - $nvmeUsedThreshold)% 以上消費でアラート"
+    } else {
+        @"
+5(05) 代替処理済みセクタ
+197(C5) 代替処理待ちセクタ
+198(C6) 回復不能セクタ
+"@
     }
 
     # メール本文
@@ -73,6 +88,7 @@ PredictFailure: $($disk.PredictFailure)
 
 Important Attributes:
 $($important | Format-Table -AutoSize | Out-String)
+$legend
 
 "@
 
